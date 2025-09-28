@@ -8,20 +8,20 @@
 ## 執行流程 (main)
 ```
 1. 從 輸入 解析使用者描述
-   → If empty: ERROR "No feature description provided"
+   → 若為空：ERROR "No feature description provided"
 2. 從描述中擷取主要概念
    → 識別：actors、actions、data、constraints
 3. 對每個不清楚的面向：
    → 標記為 [NEEDS CLARIFICATION: 具體問題]
-4. 補齊 User Scenarios & Testing 區段
-   → If no clear user flow: ERROR "Cannot determine user scenarios"
+4. 補齊「使用者情境與測試」區段
+   → 若沒有明確的使用者流程：ERROR "Cannot determine user scenarios"
 5. 產生功能性需求
    → 每項需求必須可被測試
    → 標記含糊不清的需求
 6. 辨識關鍵實體（若涉資料）
 7. 執行審查清單
-   → If any [NEEDS CLARIFICATION]: WARN "Spec has uncertainties"
-   → If implementation details found: ERROR "Remove tech details"
+   → 若仍存在 [NEEDS CLARIFICATION]：WARN "Spec has uncertainties"
+   → 若發現實作細節：ERROR "Remove tech details"
 8. 回傳：SUCCESS（規格準備好進入規劃）
 ```
 

@@ -3,21 +3,21 @@
 自動從所有功能計畫產生。上次更新時間：[DATE]
 
 ## 現用技術
-[EXTRACTED FROM ALL PLAN.MD FILES]
+[從所有 plan.md 檔案擷取]
 
 ## 專案結構
 ```
-[ACTUAL STRUCTURE FROM PLANS]
+[來自各計畫的實際結構]
 ```
 
 ## 命令
-[ONLY COMMANDS FOR ACTIVE TECHNOLOGIES]
+[僅列出現用技術的命令]
 
 ## 程式碼風格
-[LANGUAGE-SPECIFIC, ONLY FOR LANGUAGES IN USE]
+[針對使用中的語言專屬的規範]
 
 ## 近期變更
-[LAST 3 FEATURES AND WHAT THEY ADDED]
+[最近三項功能與其新增內容]
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

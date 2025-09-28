@@ -8,13 +8,13 @@ description: 在任務生成後，對 spec.md、plan.md 和 tasks.md 進行非�
 
 $ARGUMENTS
 
-Goal: 識別三個核心工件（`spec.md`、`plan.md`、`tasks.md`）之間在實作前的任何不一致、重複、模糊或規格不足項目。此命令必須僅在 `/tasks` 已成功產生完整 `tasks.md` 之後執行。
+目標：識別三個核心工件（`spec.md`、`plan.md`、`tasks.md`）之間在實作前的任何不一致、重複、模糊或規格不足項目。此命令必須僅在 `/tasks` 已成功產生完整 `tasks.md` 之後執行。
 
-STRICTLY READ-ONLY: 絕對**不要**修改任何檔案。輸出一份結構化分析報告。可提供選擇性的修復計畫（使用者必須明確同意後，任何後續的編輯指令才會手動被觸發）。
+嚴格唯讀：絕對**不要**修改任何檔案。輸出一份結構化分析報告。可提供選擇性的修復計畫（使用者必須明確同意後，任何後續的編輯指令才會手動被觸發）。
 
-Constitution Authority: 專案憲章（`.specify/memory/constitution.md`）在本次分析範圍內為不可談判。與憲章衝突的事項自動視為 CRITICAL，且必須調整 spec、plan 或 tasks——不得淡化、重新解釋或悄然忽視原則。若必須變更某項原則，該變更必須在 `/analyze` 之外以明確的憲章更新進行。
+憲章權威：專案憲章（`.specify/memory/constitution.md`）在本次分析範圍內為不可談判。與憲章衝突的事項自動視為 CRITICAL，且必須調整 spec、plan 或 tasks——不得淡化、重新解釋或悄然忽視原則。若必須變更某項原則，該變更必須在 `/analyze` 之外以明確的憲章更新進行。
 
-Execution steps:
+執行步驟：
 
 1. 從儲存庫根目錄執行一次 `.specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks` 並解析其 JSON 輸出以取得 FEATURE_DIR 與 AVAILABLE_DOCS。推導絕對路徑：
    - SPEC = FEATURE_DIR/spec.md
@@ -65,37 +65,37 @@ Execution steps:
 
 6. 產出一份 Markdown 報告（不得寫入檔案），包含章節：
 
-   ### Specification Analysis Report
-   | ID | Category | Severity | Location(s) | Summary | Recommendation |
-   |----|----------|----------|-------------|---------|----------------|
-   | A1 | Duplication | HIGH | spec.md:L120-134 | 兩項相似的需求 ... | 合併措辭；保留較清楚的版本 |
-   （為每一項發現新增一列；產生以類別首字母為前綴的穩定 ID。）
+    ### 規格分析報告
+    | ID | 類別 | 嚴重度 | 位置 | 摘要 | 建議 |
+    |----|------|--------|------|------|------|
+    | A1 | 重複 | HIGH | spec.md:L120-134 | 兩項相似的需求 ... | 合併措辭；保留較清楚的版本 |
+    （為每一項發現新增一列；產生以類別首字母為前綴的穩定 ID。）
 
-   額外小節：
-   - Coverage Summary Table:
-     | Requirement Key | Has Task? | Task IDs | Notes |
-   - Constitution Alignment Issues（如有）
-   - Unmapped Tasks（如有）
-   - Metrics:
-     * Total Requirements
-     * Total Tasks
-     * Coverage % (requirements with >=1 task)
-     * Ambiguity Count
-     * Duplication Count
-     * Critical Issues Count
+    額外小節：
+    - 覆蓋摘要表：
+       | 需求鍵 | 是否有任務？ | 任務 ID | 備註 |
+    - 憲章對齊問題（如有）
+    - 未對應任務（如有）
+    - 指標：
+       * 總需求數
+       * 總任務數
+       * 覆蓋率（至少有 1 項任務的需求比率）
+       * 歧義計數
+       * 重複計數
+       * 關鍵問題數
 
-7. 在報告結尾輸出一個簡潔的 Next Actions 區塊：
+7. 在報告結尾輸出一個簡潔的後續行動區塊：
    - 若存在 CRITICAL 問題：建議在執行 `/implement` 之前先行解決。
    - 若僅為 LOW/MEDIUM：使用者可繼續，但提供改進建議。
    - 提供明確的指令建議範例：例如 "Run /specify with refinement"、"Run /plan to adjust architecture"、"Manually edit tasks.md to add coverage for 'performance-metrics'"。
 
 8. 詢問使用者：「您要我為最重要的前 N 個問題建議具體的修復編輯嗎？」（請勿自動套用這些編輯。）
 
-Behavior rules:
+行為規則：
 - 永遠不要修改檔案。
 - 絕對不要對缺失的章節進行杜撰——若不存在就回報它們。
 - 保持發現的決定性：若未改變內容重複執行時，應產生一致的 ID 與計數。
 - 將主表中的總發現數限制為 50；剩餘項目以彙總溢出說明列出。
 - 若未發現任何問題，輸出一份成功報告並附上覆蓋率統計與後續建議。
 
-Context: $ARGUMENTS
+背景：$ARGUMENTS
