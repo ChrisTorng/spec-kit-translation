@@ -1,0 +1,101 @@
+---
+description: 在任務生成後，對 spec.md、plan.md 和 tasks.md 進行非破壞性的跨工件一致性與品質分析。
+---
+
+使用者輸入可由代理直接提供或作為指令參數傳入 — 在繼續處理此提示前，您必須先考慮該輸入（若非空）。
+
+使用者輸入:
+
+$ARGUMENTS
+
+Goal: 識別三個核心工件（`spec.md`、`plan.md`、`tasks.md`）之間在實作前的任何不一致、重複、模糊或規格不足項目。此命令必須僅在 `/tasks` 已成功產生完整 `tasks.md` 之後執行。
+
+STRICTLY READ-ONLY: 絕對**不要**修改任何檔案。輸出一份結構化分析報告。可提供選擇性的修復計畫（使用者必須明確同意後，任何後續的編輯指令才會手動被觸發）。
+
+Constitution Authority: 專案憲章（`.specify/memory/constitution.md`）在本次分析範圍內為不可談判。與憲章衝突的事項自動視為 CRITICAL，且必須調整 spec、plan 或 tasks——不得淡化、重新解釋或悄然忽視原則。若必須變更某項原則，該變更必須在 `/analyze` 之外以明確的憲章更新進行。
+
+Execution steps:
+
+1. 從儲存庫根目錄執行一次 `.specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks` 並解析其 JSON 輸出以取得 FEATURE_DIR 與 AVAILABLE_DOCS。推導絕對路徑：
+   - SPEC = FEATURE_DIR/spec.md
+   - PLAN = FEATURE_DIR/plan.md
+   - TASKS = FEATURE_DIR/tasks.md
+   若任一必要檔案遺失則中止並回報錯誤訊息（指示使用者執行遺失的前置命令）。
+
+2. 載入工件：
+   - 解析 `spec.md` 欄位：Overview/Context、Functional Requirements、Non-Functional Requirements、User Stories、Edge Cases（若存在）。
+   - 解析 `plan.md`：架構/技術棧選擇、資料模型參考、階段、技術限制。
+   - 解析 `tasks.md`：任務 ID、描述、階段分組、平行標記 [P]、參照的檔案路徑。
+   - 載入憲章 `.specify/memory/constitution.md` 以進行原則驗證。
+
+3. 建立內部語意模型：
+   - 需求清單：每一項功能需求與非功能需求皆建立穩定鍵（根據祈使片語產生 slug；例如 "User can upload file" -> `user-can-upload-file`）。
+   - 使用者故事/操作清單。
+   - 任務覆蓋對應：將每個任務映射到一或多個需求或故事（以關鍵字或明確參照模式推論，例如 ID 或關鍵片語）。
+   - 憲章規則集：擷取原則名稱及任何 MUST/SHOULD 類的規範性陳述。
+
+4. 偵測流程：
+   A. 重複偵測：
+      - 識別近似重複的需求。標註品質較低的表述以便合併。
+   B. 模糊性偵測：
+      - 標示缺乏可量化標準的模糊形容詞（例如 fast、scalable、secure、intuitive、robust）。
+      - 標示未解析的佔位詞（TODO、TKTK、???、<placeholder> 等）。
+   C. 規格不足：
+      - 具有動詞但缺少對象或可衡量結果的需求。
+      - 缺少驗收標準對齊的使用者故事。
+      - 任務參照了 spec/plan 中未定義的檔案或元件。
+   D. 與憲章的一致性：
+      - 任何與 MUST 原則衝突的需求或計畫元素。
+      - 憲章要求的章節或品質門檻遺缺。
+   E. 覆蓋缺口：
+      - 沒有任何相關任務的需求。
+      - 沒有對應需求/故事的任務。
+      - 未在任務中反映的非功能性需求（例如效能、安全）。
+   F. 不一致：
+      - 術語漂移（相同概念在不同檔案中以不同名稱出現）。
+      - 在 plan 中參照但在 spec 中缺失的資料實體（或反之亦然）。
+      - 任務排序矛盾（例如在無相依註記下先進行整合任務而非基礎設置）。
+      - 相互衝突的需求（例如一處要求使用 Next.js，另一處則要求使用 Vue 作為框架）。
+
+5. 嚴重度指派啟發式：
+   - CRITICAL：違反憲章 MUST、遺缺核心規格工件，或導致基線功能阻塞且無任何覆蓋的需求。
+   - HIGH：重複或衝突的需求、模糊的安全/效能屬性、不可測試的驗收準則。
+   - MEDIUM：術語漂移、缺少非功能任務覆蓋、規格不足的邊緣案例。
+   - LOW：風格/措辭改善、對執行順序無重大影響的次要冗餘。
+
+6. 產出一份 Markdown 報告（不得寫入檔案），包含章節：
+
+   ### Specification Analysis Report
+   | ID | Category | Severity | Location(s) | Summary | Recommendation |
+   |----|----------|----------|-------------|---------|----------------|
+   | A1 | Duplication | HIGH | spec.md:L120-134 | 兩項相似的需求 ... | 合併措辭；保留較清楚的版本 |
+   （為每一項發現新增一列；產生以類別首字母為前綴的穩定 ID。）
+
+   額外小節：
+   - Coverage Summary Table:
+     | Requirement Key | Has Task? | Task IDs | Notes |
+   - Constitution Alignment Issues（如有）
+   - Unmapped Tasks（如有）
+   - Metrics:
+     * Total Requirements
+     * Total Tasks
+     * Coverage % (requirements with >=1 task)
+     * Ambiguity Count
+     * Duplication Count
+     * Critical Issues Count
+
+7. 在報告結尾輸出一個簡潔的 Next Actions 區塊：
+   - 若存在 CRITICAL 問題：建議在執行 `/implement` 之前先行解決。
+   - 若僅為 LOW/MEDIUM：使用者可繼續，但提供改進建議。
+   - 提供明確的指令建議範例：例如 "Run /specify with refinement"、"Run /plan to adjust architecture"、"Manually edit tasks.md to add coverage for 'performance-metrics'"。
+
+8. 詢問使用者：「您要我為最重要的前 N 個問題建議具體的修復編輯嗎？」（請勿自動套用這些編輯。）
+
+Behavior rules:
+- 永遠不要修改檔案。
+- 絕對不要對缺失的章節進行杜撰——若不存在就回報它們。
+- 保持發現的決定性：若未改變內容重複執行時，應產生一致的 ID 與計數。
+- 將主表中的總發現數限制為 50；剩餘項目以彙總溢出說明列出。
+- 若未發現任何問題，輸出一份成功報告並附上覆蓋率統計與後續建議。
+
+Context: $ARGUMENTS
